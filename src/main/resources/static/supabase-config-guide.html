@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Supabase配置指南</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 40px; line-height: 1.6; }
+        .step { background: #f5f5f5; padding: 20px; margin: 20px 0; border-radius: 8px; }
+        code { background: #eee; padding: 2px 6px; border-radius: 4px; }
+        .important { background: #fff3cd; border-left: 4px solid #ffc107; padding: 15px; margin: 15px 0; }
+    </style>
+</head>
+<body>
+    <h1>Supabase配置指南</h1>
+    
+    <div class="step">
+        <h2>步骤1：创建Supabase项目</h2>
+        <ol>
+            <li>访问 <a href="https://supabase.com" target="_blank">Supabase官网</a></li>
+            <li>注册账号并登录</li>
+            <li>点击 "New Project" 创建新项目</li>
+            <li>填写项目名称和数据库密码</li>
+            <li>选择离您最近的地域</li>
+        </ol>
+    </div>
+
+    <div class="step">
+        <h2>步骤2：获取项目配置</h2>
+        <ol>
+            <li>进入项目仪表板</li>
+            <li>点击左侧菜单的 "Settings"</li>
+            <li>选择 "API" 标签页</li>
+            <li>复制以下信息：
+                <ul>
+                    <li><strong>Project URL</strong> - 项目URL</li>
+                    <li><strong>anon public</strong> - 匿名密钥</li>
+                </ul>
+            </li>
+        </ol>
+    </div>
+
+    <div class="step">
+        <h2>步骤3：配置认证设置</h2>
+        <ol>
+            <li>在Supabase仪表板中，点击左侧菜单的 "Authentication"</li>
+            <li>选择 "Settings" 标签页</li>
+            <li>在 "Site URL" 中填写：<code>http://localhost:8080</code></li>
+            <li>确保 "Enable email confirmations" 已开启</li>
+            <li>在 "URL Configuration" 中设置重定向URL：<code>http://localhost:8080</code></li>
+        </ol>
+    </div>
+
+    <div class="step">
+        <h2>步骤4：更新配置文件</h2>
+        <p>打开 <code>auth.js</code> 文件，更新以下配置：</p>
+        <pre><code>// 替换为您的Supabase项目配置
+const SUPABASE_URL = 'https://your-project-ref.supabase.co';
+const SUPABASE_ANON_KEY = 'your-anon-key-here';</code></pre>
+        
+        <p>将上述内容替换为您的实际配置：</p>
+        <pre><code>const SUPABASE_URL = '您的项目URL';
+const SUPABASE_ANON_KEY = '您的匿名密钥';</code></pre>
+    </div>
+
+    <div class="important">
+        <h3>重要提示</h3>
+        <ul>
+            <li>确保项目URL格式正确：<code>https://your-project-ref.supabase.co</code></li>
+            <li>匿名密钥以 <code>eyJ</code> 开头</li>
+            <li>本地开发时使用 <code>http://localhost:8080</code></li>
+            <li>生产环境需要配置正确的域名</li>
+        </ul>
+    </div>
+
+    <div class="step">
+        <h2>步骤5：测试配置</h2>
+        <p>配置完成后：</p>
+        <ol>
+            <li>重启Spring Boot应用</li>
+            <li>访问 <code>http://localhost:8080</code></li>
+            <li>尝试注册新用户</li>
+            <li>测试忘记密码功能</li>
+        </ol>
+    </div>
+
+    <h2>常见问题解决</h2>
+    <ul>
+        <li><strong>"Failed to fetch" 错误</strong>：检查Supabase配置是否正确，网络连接是否正常</li>
+        <li><strong>CORS 错误</strong>：确保在Supabase中正确配置了重定向URL</li>
+        <li><strong>邮件未收到</strong>：检查垃圾邮件文件夹，确认Supabase邮件服务配置</li>
+    </ul>
+</body>
+</html>
