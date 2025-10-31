@@ -1,0 +1,125 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>旅行需求输入 - AI旅行规划器</title>
+    <link rel="stylesheet" href="styles.css">
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="../config.js"></script>
+</head>
+<body>
+    <div id="app">
+        <!-- 导航栏 -->
+        <nav class="navbar">
+            <div class="nav-container">
+                <h1 class="logo">AI旅行规划器</h1>
+                <div id="user-menu" class="user-menu">
+                    <span id="user-email" class="user-email"></span>
+                    <button id="logout-btn" class="btn btn-outline">退出</button>
+                </div>
+            </div>
+        </nav>
+
+        <!-- 主要内容区域 -->
+        <main class="main-content">
+            <div class="chat-container">
+                <div class="chat-header">
+                    <h2>AI旅行规划助手</h2>
+                    <p>请告诉我您的旅行需求，我将为您生成完美的旅行计划</p>
+                </div>
+
+                <!-- 聊天消息区域 -->
+                <div id="chat-messages" class="chat-messages">
+                    <div class="message bot-message">
+                        <div class="message-avatar">🤖</div>
+                        <div class="message-content">
+                            <p>您好！我是AI旅行规划助手，请告诉我您的旅行需求，例如：</p>
+                            <ul>
+                                <li>想去哪里旅行？</li>
+                                <li>什么时间出发和返回？</li>
+                                <li>预算是多少？</li>
+                                <li>几个人同行？</li>
+                                <li>有什么特别的偏好或需求？</li>
+                            </ul>
+                            <p>您可以一次性告诉我所有信息，也可以分多次说明。</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 聊天输入区域 -->
+                <div class="chat-input-container">
+                    <div class="chat-input-wrapper">
+                        <textarea id="chat-input" class="chat-input" 
+                                  placeholder="请输入您的旅行需求，例如：我想去北京旅游，12月1日到12月7日，预算5000元，2个人，喜欢历史文化和美食..." 
+                                  rows="3"></textarea>
+                        <div class="chat-actions">
+                            <button id="send-message" class="btn btn-primary">发送</button>
+                            <button id="clear-chat" class="btn btn-outline">清空对话</button>
+                            <button id="save-draft" class="btn btn-outline">保存草稿</button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 需求确认区域 -->
+                <div id="demand-confirm" class="demand-confirm" style="display: none;">
+                    <div class="confirm-header">
+                        <h3>请确认您的旅行需求</h3>
+                        <p>根据您的描述，我理解的需求如下：</p>
+                    </div>
+                    <div id="demand-summary" class="demand-summary">
+                        <!-- 需求摘要将在这里显示 -->
+                    </div>
+                    <div class="confirm-actions">
+                        <button id="confirm-demand" class="btn btn-primary">确认并生成计划</button>
+                        <button id="edit-demand" class="btn btn-outline">修改需求</button>
+                    </div>
+                </div>
+
+                <!-- 加载状态 -->
+                <div id="loading" class="loading" style="display: none;">
+                    <div class="spinner"></div>
+                    <p>正在生成您的旅行计划...</p>
+                </div>
+
+                <!-- 结果展示 -->
+                <div id="result" class="result" style="display: none;">
+                    <h3>您的旅行计划已生成！</h3>
+                    <div id="travel-plan" class="travel-plan">
+                        <!-- 旅行计划内容将在这里显示 -->
+                    </div>
+                    <div class="result-actions">
+                        <button id="download-plan" class="btn btn-primary">下载计划</button>
+                        <button id="new-plan" class="btn btn-outline">创建新计划</button>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <!-- 模态对话框 -->
+    <div id="modal-overlay" class="modal-overlay">
+        <div class="modal-dialog">
+            <div class="modal-header">
+                <div id="modal-icon" class="modal-icon"></div>
+                <h3 id="modal-title" class="modal-title"></h3>
+            </div>
+            <div id="modal-content" class="modal-content"></div>
+            <div class="modal-actions">
+                <button id="modal-confirm" class="modal-btn primary">确定</button>
+                <button id="modal-cancel" class="modal-btn secondary" style="display: none;">取消</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 保存状态指示器 -->
+    <div id="save-status" class="save-status">
+        <div class="save-status-content">
+            <span id="save-status-icon" class="save-status-icon"></span>
+            <span id="save-status-text" class="save-status-text"></span>
+        </div>
+    </div>
+
+    <script src="demand.js"></script>
+</body>
+</html>

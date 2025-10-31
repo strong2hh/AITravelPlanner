@@ -1,16 +1,10 @@
-package com.aitravelplanner;
+package com.aitravelplanner.Gemini;
 
 import com.google.genai.Client;
 import com.google.genai.types.GenerateContentResponse;
-import org.junit.jupiter.api.Test;
-import org.springframework.boot.test.context.SpringBootTest;
 
-@SpringBootTest
-class AiTravelPlannerApplicationTests {
-
-    @Test
-    void contextLoads() {
-        
+public class Gemini {
+    public static void main(String[] args) {
         // The client gets the API key from the environment variable `GEMINI_API_KEY`.
         Client client = new Client();
 
@@ -21,7 +15,5 @@ class AiTravelPlannerApplicationTests {
                         null);
 
         System.out.println(response.text());
-
     }
-
 }

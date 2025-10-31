@@ -222,6 +222,9 @@ async function handleLogin(event) {
         console.log('登录成功:', data.user);
         hideAllModals();
         
+        // 跳转到需求页面
+        window.location.href = '/Demand/index.html';
+        
     } catch (error) {
         console.error('登录错误:', error);
         errorElement.textContent = getErrorMessage(error);
