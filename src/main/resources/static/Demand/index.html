@@ -5,7 +5,8 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>旅行需求输入 - AI旅行规划器</title>
     <link rel="stylesheet" href="styles.css">
-    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <!-- 使用多个备选CDN源，优先使用unpkg -->
+    <script src="https://unpkg.com/@supabase/supabase-js@2"></script>
     <script src="../config.js"></script>
 </head>
 <body>
@@ -58,6 +59,11 @@
                             <button id="clear-chat" class="btn btn-outline">清空对话</button>
                             <button id="save-draft" class="btn btn-outline">保存草稿</button>
                         </div>
+                        <!-- 语音识别按钮 -->
+                        <button id="voice-btn" class="voice-btn">
+                            <span class="voice-icon">🎤</span>
+                            <span class="voice-text">按住说话</span>
+                        </button>
                     </div>
                 </div>
 
@@ -120,6 +126,7 @@
         </div>
     </div>
 
-    <script src="demand.js"></script>
+    <!-- 直接引用修复后的JavaScript文件 -->
+    <script src="demand-fixed.js"></script>
 </body>
 </html>

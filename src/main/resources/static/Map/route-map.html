@@ -1,0 +1,683 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>路线规划地图 - AI旅行规划器</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Helvetica Neue', Arial, sans-serif;
+            background: #f5f7fa;
+            color: #333;
+            line-height: 1.6;
+        }
+        
+        .container {
+            display: flex;
+            height: 100vh;
+        }
+        
+        .sidebar {
+            width: 400px;
+            background: white;
+            border-right: 1px solid #e1e5e9;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+        
+        .header {
+            padding: 20px;
+            background: #2c3e50;
+            color: white;
+            text-align: center;
+        }
+        
+        .header h1 {
+            font-size: 1.5em;
+            margin-bottom: 5px;
+        }
+        
+        .header p {
+            font-size: 0.9em;
+            opacity: 0.8;
+        }
+        
+        .input-section {
+            padding: 20px;
+            border-bottom: 1px solid #e1e5e9;
+        }
+        
+        .input-group {
+            margin-bottom: 15px;
+        }
+        
+        .input-group label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: 500;
+            color: #2c3e50;
+        }
+        
+        .input-group input {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 6px;
+            font-size: 14px;
+            transition: border-color 0.3s;
+        }
+        
+        .input-group input:focus {
+            outline: none;
+            border-color: #3498db;
+            box-shadow: 0 0 0 2px rgba(52, 152, 219, 0.2);
+        }
+        
+        .buttons {
+            display: flex;
+            gap: 10px;
+            margin-top: 20px;
+        }
+        
+        .btn {
+            flex: 1;
+            padding: 12px;
+            border: none;
+            border-radius: 6px;
+            font-size: 14px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+        
+        .btn-primary {
+            background: #3498db;
+            color: white;
+        }
+        
+        .btn-primary:hover {
+            background: #2980b9;
+            transform: translateY(-1px);
+        }
+        
+        .btn-secondary {
+            background: #95a5a6;
+            color: white;
+        }
+        
+        .btn-secondary:hover {
+            background: #7f8c8d;
+        }
+        
+        .route-info {
+            flex: 1;
+            overflow-y: auto;
+            padding: 20px;
+        }
+        
+        .info-section {
+            background: #f8f9fa;
+            border-radius: 8px;
+            padding: 15px;
+            margin-bottom: 15px;
+            border-left: 4px solid #3498db;
+        }
+        
+        .info-section h3 {
+            margin-bottom: 10px;
+            color: #2c3e50;
+            font-size: 1.1em;
+        }
+        
+        .info-item {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 8px;
+            font-size: 0.9em;
+        }
+        
+        .info-label {
+            color: #7f8c8d;
+            font-weight: 500;
+        }
+        
+        .info-value {
+            color: #2c3e50;
+            font-weight: 600;
+        }
+        
+        .path-steps {
+            max-height: 200px;
+            overflow-y: auto;
+            background: white;
+            border: 1px solid #e1e5e9;
+            border-radius: 6px;
+            padding: 10px;
+        }
+        
+        .path-step {
+            padding: 5px 0;
+            border-bottom: 1px solid #f1f2f6;
+            font-size: 0.85em;
+            color: #5a6c7d;
+        }
+        
+        .path-step:last-child {
+            border-bottom: none;
+        }
+        
+        .map-container {
+            flex: 1;
+            position: relative;
+        }
+        
+        #map {
+            width: 100%;
+            height: 100%;
+        }
+        
+        .loading {
+            display: none;
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: rgba(255, 255, 255, 0.9);
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+            z-index: 1000;
+            text-align: center;
+        }
+        
+        .spinner {
+            width: 40px;
+            height: 40px;
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid #3498db;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 10px;
+        }
+        
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        
+        .error-message {
+            background: #e74c3c;
+            color: white;
+            padding: 10px;
+            border-radius: 4px;
+            margin: 10px 0;
+            display: none;
+        }
+        
+        .success-message {
+            background: #27ae60;
+            color: white;
+            padding: 10px;
+            border-radius: 4px;
+            margin: 10px 0;
+            display: none;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="sidebar">
+            <div class="header">
+                <h1>🚶 步行路线规划</h1>
+                <p>AI旅行规划器 - 智能路线导航</p>
+            </div>
+            
+            <div class="input-section">
+                <div class="input-group">
+                    <label for="origin">📍 起点位置</label>
+                    <input type="text" id="origin" placeholder="输入起点地址或经纬度 (如: 北京市海淀区中关村大街)">
+                </div>
+                
+                <div class="input-group">
+                    <label for="destination">🏁 终点位置</label>
+                    <input type="text" id="destination" placeholder="输入终点地址或经纬度 (如: 北京市朝阳区三里屯)">
+                </div>
+                
+                <div class="buttons">
+                    <button class="btn btn-primary" id="planRoute">🚀 规划路线</button>
+                    <button class="btn btn-secondary" id="clearRoute">🗑️ 清除路线</button>
+                </div>
+                
+                <div class="error-message" id="errorMessage"></div>
+                <div class="success-message" id="successMessage"></div>
+            </div>
+            
+            <div class="route-info" id="routeInfo">
+                <div class="info-section">
+                    <h3>💡 使用说明</h3>
+                    <p>输入起点和终点地址或经纬度坐标，点击"规划路线"按钮即可生成步行路线。</p>
+                    <p>支持格式：</p>
+                    <ul>
+                        <li>地址："北京市海淀区中关村大街"</li>
+                        <li>坐标："116.397428,39.90923"</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+        
+        <div class="map-container">
+            <div id="map"></div>
+            <div class="loading" id="loading">
+                <div class="spinner"></div>
+                <p>正在规划路线中...</p>
+            </div>
+        </div>
+    </div>
+
+    <script type="text/javascript">
+        // 全局变量
+        let map = null;
+        let routeData = null;
+        let amapApiKey = null;
+        
+        // 初始化地图和API Key
+        async function initMap() {
+            try {
+                // 显示加载状态
+                showLoading(true);
+                
+                // 1. 获取高德地图API Key
+                await fetchApiKey();
+                
+                if (!amapApiKey) {
+                    showError('无法获取高德地图API Key，请检查后端配置');
+                    return;
+                }
+                
+                // 2. 动态加载高德地图JS API
+                await loadAmapApi();
+                
+                // 3. 初始化地图（添加完整的错误处理）
+                try {
+                    // 首先确保地图容器存在且可见
+                    const mapContainer = document.getElementById('map');
+                    if (!mapContainer) {
+                        throw new Error('地图容器元素不存在');
+                    }
+                    
+                    // 确保容器有正确的尺寸
+                    mapContainer.style.width = '100%';
+                    mapContainer.style.height = '100%';
+                    mapContainer.style.minHeight = '400px';
+                    
+                    // 使用最简化的配置初始化地图
+                    map = new AMap.Map('map', {
+                        zoom: 13,
+                        center: [116.397428, 39.90923], // 北京中心
+                        viewMode: '2D' // 使用2D模式避免3D渲染问题
+                    });
+                    
+                    console.log('地图初始化成功');
+                } catch (error) {
+                    console.error('地图初始化失败:', error);
+                    showError('地图初始化失败：' + error.message);
+                    return;
+                }
+                
+                // 4. 添加地图控件（v2.0版本兼容）
+                setTimeout(() => {
+                    if (map && map.addControl) {
+                        map.addControl(new AMap.Scale({
+                            position: 'LB'
+                        }));
+                        map.addControl(new AMap.ToolBar({
+                            position: 'RT'
+                        }));
+                    }
+                }, 500);
+                
+                // 5. 绑定事件
+                bindEvents();
+                
+                showSuccess('地图初始化成功！');
+                
+            } catch (error) {
+                console.error('地图初始化失败:', error);
+                showError('地图初始化失败：' + error.message);
+            } finally {
+                showLoading(false);
+            }
+        }
+        
+        // 获取高德地图API Key
+        async function fetchApiKey() {
+            try {
+                const response = await fetch('/api/map-api-key');
+                const data = await response.json();
+                
+                if (data.success) {
+                    amapApiKey = data.apiKey;
+                    console.log('API Key获取成功:', amapApiKey);
+                } else {
+                    throw new Error(data.error || 'API Key获取失败');
+                }
+            } catch (error) {
+                console.error('获取API Key失败:', error);
+                throw error;
+            }
+        }
+        
+        // 动态加载高德地图API
+        function loadAmapApi() {
+            return new Promise((resolve, reject) => {
+                if (window.AMap) {
+                    resolve();
+                    return;
+                }
+                
+                // 使用最简单的方式加载API，避免插件参数导致的问题
+                const script = document.createElement('script');
+                script.src = `https://webapi.amap.com/maps?v=2.0&key=${amapApiKey}`;
+                
+                script.onload = function() {
+                    // 等待地图API完全初始化
+                    setTimeout(() => {
+                        // 只加载必需的插件，避免同时加载过多插件
+                        AMap.plugin(['AMap.Scale', 'AMap.ToolBar'], function() {
+                            // 其他插件在需要时动态加载
+                            resolve();
+                        });
+                    }, 100);
+                };
+                
+                script.onerror = function(error) {
+                    console.error('地图API加载失败:', error);
+                    reject(error);
+                };
+                
+                document.head.appendChild(script);
+            });
+        }
+        
+        // 绑定事件
+        function bindEvents() {
+            document.getElementById('planRoute').addEventListener('click', planRoute);
+            document.getElementById('clearRoute').addEventListener('click', clearRoute);
+            
+            // 回车键触发路线规划
+            document.getElementById('origin').addEventListener('keypress', function(e) {
+                if (e.key === 'Enter') planRoute();
+            });
+            
+            document.getElementById('destination').addEventListener('keypress', function(e) {
+                if (e.key === 'Enter') planRoute();
+            });
+        }
+        
+        // 规划路线
+        async function planRoute() {
+            const origin = document.getElementById('origin').value.trim();
+            const destination = document.getElementById('destination').value.trim();
+            
+            if (!origin || !destination) {
+                showError('请输入起点和终点位置');
+                return;
+            }
+            
+            try {
+                showLoading(true);
+                
+                // 调用后端API进行路线规划（添加超时控制）
+                const controller = new AbortController();
+                const timeoutId = setTimeout(() => controller.abort(), 10000); // 10秒超时
+                
+                const response = await fetch('/api/plan-walking-route', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        origin: origin,
+                        destination: destination
+                    }),
+                    signal: controller.signal
+                });
+                
+                clearTimeout(timeoutId);
+                
+                if (!response.ok) {
+                    throw new Error(`HTTP错误: ${response.status}`);
+                }
+                
+                const data = await response.json();
+                
+                if (!data.success) {
+                    throw new Error(data.error || '路线规划失败');
+                }
+                
+                // 保存路线数据
+                routeData = data;
+                
+                // 在地图上绘制路线
+                await drawRouteOnMap(data);
+                
+                // 显示路线信息
+                displayRouteInfo(data);
+                
+                showSuccess('路线规划成功！');
+                
+            } catch (error) {
+                console.error('路线规划失败:', error);
+                
+                if (error.name === 'AbortError') {
+                    showError('请求超时，请检查后端服务是否启动。启动命令：mvn spring-boot:run');
+                } else if (error.message.includes('HTTP错误')) {
+                    showError('后端服务未响应，请确保Spring Boot应用已启动');
+                } else {
+                    showError('路线规划失败：' + error.message);
+                }
+            } finally {
+                showLoading(false);
+            }
+        }
+        
+        // 在地图上绘制路线
+        async function drawRouteOnMap(data) {
+            if (!map) return;
+            
+            // 清除之前的路线和标记
+            map.clearMap();
+            
+            // 解析坐标
+            const originCoords = parseCoordinate(data.originCoordinate);
+            const destCoords = parseCoordinate(data.destinationCoordinate);
+            
+            // 添加起点和终点标记
+            const originMarker = new AMap.Marker({
+                position: originCoords,
+                map: map,
+                icon: 'https://webapi.amap.com/theme/v1.3/markers/n/start.png',
+                title: '起点'
+            });
+            
+            const destMarker = new AMap.Marker({
+                position: destCoords,
+                map: map,
+                icon: 'https://webapi.amap.com/theme/v1.3/markers/n/end.png',
+                title: '终点'
+            });
+            
+            // 直接使用后端返回的路线数据进行绘制
+            drawCustomRoute(data.routeData);
+            
+            // 调整地图视野
+            map.setFitView();
+        }
+        
+        // 绘制自定义路线（使用后端返回的路线数据）
+        function drawCustomRoute(routeData) {
+            if (!routeData || !routeData.paths || !routeData.paths[0]) return;
+            
+            const path = routeData.paths[0];
+            
+            // 绘制路线路径
+            if (path.steps && path.steps.length > 0) {
+                const polyline = new AMap.Polyline({
+                    path: path.steps.flatMap(step => {
+                        return step.polyline.split(';').map(point => {
+                            const [lng, lat] = point.split(',');
+                            return [parseFloat(lng), parseFloat(lat)];
+                        });
+                    }),
+                    strokeColor: '#3366FF',
+                    strokeWeight: 6,
+                    strokeOpacity: 0.8,
+                    map: map
+                });
+            }
+        }
+        
+        // 显示路线信息
+        function displayRouteInfo(data) {
+            const routeInfo = document.getElementById('routeInfo');
+            
+            if (!data.routeData || !data.routeData.paths || !data.routeData.paths[0]) {
+                routeInfo.innerHTML = '<div class="info-section"><h3>📊 路线信息</h3><p>暂无路线数据</p></div>';
+                return;
+            }
+            
+            const route = data.routeData.paths[0];
+            
+            let html = `
+                <div class="info-section">
+                    <h3>📊 路线信息</h3>
+                    <div class="info-item">
+                        <span class="info-label">总距离：</span>
+                        <span class="info-value">${(route.distance / 1000).toFixed(2)} 公里</span>
+                    </div>
+                    <div class="info-item">
+                        <span class="info-label">预计时间：</span>
+                        <span class="info-value">${Math.round(route.duration / 60)} 分钟</span>
+                    </div>
+                    <div class="info-item">
+                        <span class="info-label">起点坐标：</span>
+                        <span class="info-value">${data.originCoordinate}</span>
+                    </div>
+                    <div class="info-item">
+                        <span class="info-label">终点坐标：</span>
+                        <span class="info-value">${data.destinationCoordinate}</span>
+                    </div>
+                </div>
+            `;
+            
+            // 显示路径步骤
+            if (route.steps && route.steps.length > 0) {
+                html += `
+                    <div class="info-section">
+                        <h3>🚶 步行指引</h3>
+                        <div class="path-steps">
+                            ${route.steps.map((step, index) => `
+                                <div class="path-step">
+                                    <strong>步骤 ${index + 1}:</strong> ${step.instruction || '继续前进'}
+                                    ${step.distance ? ` (${step.distance}米)` : ''}
+                                </div>
+                            `).join('')}
+                        </div>
+                    </div>
+                `;
+            }
+            
+            routeInfo.innerHTML = html;
+        }
+        
+        // 清除路线
+        function clearRoute() {
+            if (map) {
+                map.clearMap();
+            }
+            
+            document.getElementById('origin').value = '';
+            document.getElementById('destination').value = '';
+            document.getElementById('routeInfo').innerHTML = `
+                <div class="info-section">
+                    <h3>💡 使用说明</h3>
+                    <p>输入起点和终点地址或经纬度坐标，点击"规划路线"按钮即可生成步行路线。</p>
+                    <p>支持格式：</p>
+                    <ul>
+                        <li>地址："北京市海淀区中关村大街"</li>
+                        <li>坐标："116.397428,39.90923"</li>
+                    </ul>
+                </div>
+            `;
+            
+            routeData = null;
+            showSuccess('路线已清除');
+        }
+        
+        // 辅助函数：解析坐标字符串
+        function parseCoordinate(coordinateStr) {
+            if (!coordinateStr || typeof coordinateStr !== 'string') {
+                console.warn('无效的坐标字符串:', coordinateStr);
+                return [116.397428, 39.90923]; // 返回默认坐标（北京）
+            }
+            
+            const [lngStr, latStr] = coordinateStr.split(',').map(coord => coord.trim());
+            const lng = parseFloat(lngStr);
+            const lat = parseFloat(latStr);
+            
+            // 验证坐标有效性
+            if (isNaN(lng) || isNaN(lat) || lng < -180 || lng > 180 || lat < -90 || lat > 90) {
+                console.warn('无效的坐标值:', coordinateStr, 'lng:', lng, 'lat:', lat);
+                return [116.397428, 39.90923]; // 返回默认坐标（北京）
+            }
+            
+            return [lng, lat];
+        }
+        
+        // 显示/隐藏加载状态
+        function showLoading(show) {
+            const loading = document.getElementById('loading');
+            loading.style.display = show ? 'block' : 'none';
+        }
+        
+        // 显示错误信息
+        function showError(message) {
+            const errorMsg = document.getElementById('errorMessage');
+            errorMsg.textContent = message;
+            errorMsg.style.display = 'block';
+            
+            setTimeout(() => {
+                errorMsg.style.display = 'none';
+            }, 5000);
+        }
+        
+        // 显示成功信息
+        function showSuccess(message) {
+            const successMsg = document.getElementById('successMessage');
+            successMsg.textContent = message;
+            successMsg.style.display = 'block';
+            
+            setTimeout(() => {
+                successMsg.style.display = 'none';
+            }, 3000);
+        }
+        
+        // 页面加载完成后初始化
+        document.addEventListener('DOMContentLoaded', function() {
+            // 设置默认值（可选）
+            document.getElementById('origin').value = '北京市海淀区中关村大街';
+            document.getElementById('destination').value = '北京市朝阳区三里屯';
+            
+            // 初始化地图
+            initMap();
+        });
+    </script>
+</body>
+</html>

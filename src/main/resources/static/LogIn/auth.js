@@ -1,14 +1,37 @@
-// 从config.js获取Supabase配置
-if (!window.SUPABASE_CONFIG) {
-    console.error('Supabase配置未找到，请确保config.js已正确加载');
-    throw new Error('Supabase配置缺失');
+// 安全的Supabase客户端初始化函数
+function initSupabase() {
+    if (!window.SUPABASE_CONFIG) {
+        console.error('Supabase配置未找到，请确保config.js已正确加载');
+        throw new Error('Supabase配置缺失');
+    }
+    
+    if (typeof window.supabase === 'undefined') {
+        console.error('Supabase库未加载，请检查CDN连接');
+        throw new Error('Supabase库未加载');
+    }
+    
+    const SUPABASE_URL = window.SUPABASE_CONFIG.url;
+    const SUPABASE_ANON_KEY = window.SUPABASE_CONFIG.anonKey;
+    
+    return window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY, window.SUPABASE_CONFIG.auth);
 }
 
-const SUPABASE_URL = window.SUPABASE_CONFIG.url;
-const SUPABASE_ANON_KEY = window.SUPABASE_CONFIG.anonKey;
-
 // 初始化Supabase客户端
-const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY, window.SUPABASE_CONFIG.auth);
+let supabase;
+try {
+    supabase = initSupabase();
+} catch (error) {
+    console.error('Supabase初始化失败:', error);
+    // 延迟重试
+    setTimeout(() => {
+        try {
+            supabase = initSupabase();
+            console.log('Supabase客户端重试初始化成功');
+        } catch (retryError) {
+            console.error('Supabase重试初始化失败:', retryError);
+        }
+    }, 1000);
+}
 
 // DOM元素
 const authButtons = document.getElementById('auth-buttons');
@@ -222,7 +245,7 @@ async function handleLogin(event) {
         console.log('登录成功:', data.user);
         hideAllModals();
         
-        // 跳转到需求页面
+        // 跳转到AI助手界面
         window.location.href = '/Demand/index.html';
         
     } catch (error) {

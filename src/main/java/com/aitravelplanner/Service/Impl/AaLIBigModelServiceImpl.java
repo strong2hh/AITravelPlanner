@@ -1,6 +1,6 @@
-package com.aitravelplanner.Model.Impl;
+package com.aitravelplanner.Service.Impl;
 
-import com.aitravelplanner.Model.AIAssistant;
+import com.aitravelplanner.Service.AaLIBigModelService;
 import com.alibaba.dashscope.aigc.generation.Generation;
 import com.alibaba.dashscope.aigc.generation.GenerationParam;
 import com.alibaba.dashscope.aigc.generation.GenerationResult;
@@ -9,17 +9,16 @@ import com.alibaba.dashscope.common.Role;
 import com.alibaba.dashscope.exception.ApiException;
 import com.alibaba.dashscope.exception.InputRequiredException;
 import com.alibaba.dashscope.exception.NoApiKeyException;
-import com.alibaba.dashscope.utils.JsonUtils;
 import com.alibaba.dashscope.protocol.Protocol;
 
 import java.util.Arrays;
 import java.lang.System;
 
 /**
- * 阿里云AI助手实现类
- * 基于阿里云DashScope API实现AI助手功能
+ * 阿里云大模型服务实现类
+ * 基于阿里云DashScope API实现大模型服务功能
  */
-public class AaLiAssistant implements AIAssistant {
+public class AaLIBigModelServiceImpl implements AaLIBigModelService {
     
     /**
      * 调用AI模型生成回复
@@ -156,7 +155,7 @@ public class AaLiAssistant implements AIAssistant {
      * @param args 命令行参数
      */
     public static void main(String[] args) {
-        AaLiAssistant assistant = new AaLiAssistant();
+        AaLIBigModelServiceImpl assistant = new AaLIBigModelServiceImpl();
         
         // 从控制台读取用户输入
         java.util.Scanner sc = new java.util.Scanner(System.in);

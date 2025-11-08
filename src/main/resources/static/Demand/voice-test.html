@@ -1,0 +1,261 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>语音识别测试</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 600px;
+            margin: 50px auto;
+            padding: 20px;
+        }
+        .test-container {
+            border: 1px solid #ccc;
+            padding: 20px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+        }
+        .btn {
+            padding: 10px 20px;
+            margin: 5px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+        .btn-primary {
+            background-color: #007bff;
+            color: white;
+        }
+        .status {
+            margin-top: 10px;
+            padding: 10px;
+            border-radius: 4px;
+        }
+        .success {
+            background-color: #d4edda;
+            color: #155724;
+        }
+        .error {
+            background-color: #f8d7da;
+            color: #721c24;
+        }
+        .warning {
+            background-color: #fff3cd;
+            color: #856404;
+        }
+    </style>
+</head>
+<body>
+    <h1>语音识别功能测试</h1>
+    
+    <div class="test-container">
+        <h3>测试1: 浏览器兼容性检查</h3>
+        <button id="check-browser" class="btn btn-primary">检查浏览器支持</button>
+        <div id="browser-status" class="status"></div>
+    </div>
+
+    <div class="test-container">
+        <h3>测试2: 麦克风权限检查</h3>
+        <button id="check-mic" class="btn btn-primary">检查麦克风权限</button>
+        <div id="mic-status" class="status"></div>
+    </div>
+
+    <div class="test-container">
+        <h3>测试3: 语音录制测试</h3>
+        <button id="start-recording" class="btn btn-primary">开始录音</button>
+        <button id="stop-recording" class="btn btn-primary" disabled>停止录音</button>
+        <div id="recording-status" class="status"></div>
+    </div>
+
+    <div class="test-container">
+        <h3>测试4: 事件绑定测试</h3>
+        <button id="test-voice-btn" class="btn" style="background-color: #28a745; color: white;">
+            <span class="voice-icon">🎤</span>
+            <span class="voice-text">按住说话</span>
+        </button>
+        <div id="event-status" class="status"></div>
+    </div>
+
+    <script>
+        // 测试1: 浏览器兼容性检查
+        document.getElementById('check-browser').addEventListener('click', function() {
+            const statusDiv = document.getElementById('browser-status');
+            
+            // 检查HTTPS环境
+            const isHTTPS = window.location.protocol === 'https:';
+            
+            // 检查媒体设备支持
+            const hasMediaDevices = !!navigator.mediaDevices;
+            const hasGetUserMedia = !!(navigator.mediaDevices && navigator.mediaDevices.getUserMedia);
+            const hasMediaRecorder = !!window.MediaRecorder;
+            const isSecureContext = window.isSecureContext;
+            
+            let html = '<h4>检查结果:</h4>';
+            html += `<p>协议: ${window.location.protocol} ${isHTTPS ? '✅' : '❌'}</p>`;
+            html += `<p>安全上下文: ${isSecureContext ? '✅' : '❌'}</p>`;
+            html += `<p>navigator.mediaDevices: ${hasMediaDevices ? '✅' : '❌'}</p>`;
+            html += `<p>getUserMedia: ${hasGetUserMedia ? '✅' : '❌'}</p>`;
+            html += `<p>MediaRecorder: ${hasMediaRecorder ? '✅' : '❌'}</p>`;
+            
+            if (isHTTPS && isSecureContext && hasMediaDevices && hasGetUserMedia && hasMediaRecorder) {
+                statusDiv.innerHTML = html;
+                statusDiv.className = 'status success';
+            } else {
+                html += '<p style="color: red;">语音识别需要HTTPS环境和现代浏览器支持</p>';
+                statusDiv.innerHTML = html;
+                statusDiv.className = 'status error';
+            }
+        });
+
+        // 测试2: 麦克风权限检查
+        document.getElementById('check-mic').addEventListener('click', function() {
+            const statusDiv = document.getElementById('mic-status');
+            
+            if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+                statusDiv.innerHTML = '<p>浏览器不支持麦克风访问</p>';
+                statusDiv.className = 'status error';
+                return;
+            }
+            
+            // 检查权限状态
+            if (navigator.permissions && navigator.permissions.query) {
+                navigator.permissions.query({ name: 'microphone' })
+                    .then(permissionStatus => {
+                        let message = `<p>麦克风权限状态: ${permissionStatus.state}</p>`;
+                        
+                        if (permissionStatus.state === 'granted') {
+                            message += '<p>✅ 已获得麦克风权限</p>';
+                            statusDiv.className = 'status success';
+                        } else if (permissionStatus.state === 'prompt') {
+                            message += '<p>⚠️ 需要请求麦克风权限</p>';
+                            statusDiv.className = 'status warning';
+                        } else {
+                            message += '<p>❌ 麦克风权限被拒绝</p>';
+                            statusDiv.className = 'status error';
+                        }
+                        
+                        statusDiv.innerHTML = message;
+                    })
+                    .catch(error => {
+                        statusDiv.innerHTML = `<p>无法查询权限状态: ${error.message}</p>`;
+                        statusDiv.className = 'status error';
+                    });
+            } else {
+                statusDiv.innerHTML = '<p>无法查询权限状态（浏览器不支持Permissions API）</p>';
+                statusDiv.className = 'status warning';
+            }
+        });
+
+        // 测试3: 语音录制测试
+        let mediaRecorder = null;
+        let audioChunks = [];
+        
+        document.getElementById('start-recording').addEventListener('click', async function() {
+            const statusDiv = document.getElementById('recording-status');
+            
+            try {
+                statusDiv.innerHTML = '<p>正在请求麦克风权限...</p>';
+                statusDiv.className = 'status warning';
+                
+                const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+                
+                mediaRecorder = new MediaRecorder(stream);
+                audioChunks = [];
+                
+                mediaRecorder.ondataavailable = (event) => {
+                    if (event.data.size > 0) {
+                        audioChunks.push(event.data);
+                    }
+                };
+                
+                mediaRecorder.onstop = () => {
+                    const audioBlob = new Blob(audioChunks, { type: 'audio/webm' });
+                    statusDiv.innerHTML = `<p>✅ 录音完成！音频大小: ${audioBlob.size} bytes</p>`;
+                    statusDiv.className = 'status success';
+                    
+                    // 停止所有音轨
+                    stream.getTracks().forEach(track => track.stop());
+                };
+                
+                mediaRecorder.start();
+                statusDiv.innerHTML = '<p>🔴 正在录音中...</p>';
+                statusDiv.className = 'status warning';
+                
+                document.getElementById('start-recording').disabled = true;
+                document.getElementById('stop-recording').disabled = false;
+                
+            } catch (error) {
+                statusDiv.innerHTML = `<p>❌ 录音失败: ${error.message}</p>`;
+                statusDiv.className = 'status error';
+            }
+        });
+        
+        document.getElementById('stop-recording').addEventListener('click', function() {
+            if (mediaRecorder && mediaRecorder.state === 'recording') {
+                mediaRecorder.stop();
+                document.getElementById('start-recording').disabled = false;
+                document.getElementById('stop-recording').disabled = true;
+            }
+        });
+
+        // 测试4: 事件绑定测试
+        const voiceBtn = document.getElementById('test-voice-btn');
+        const eventStatus = document.getElementById('event-status');
+        
+        let isRecording = false;
+        
+        voiceBtn.addEventListener('mousedown', function(e) {
+            e.preventDefault();
+            isRecording = true;
+            voiceBtn.style.backgroundColor = '#dc3545';
+            voiceBtn.querySelector('.voice-text').textContent = '松开结束';
+            eventStatus.innerHTML = '<p>🔴 鼠标按下 - 开始录音</p>';
+            eventStatus.className = 'status warning';
+        });
+        
+        voiceBtn.addEventListener('mouseup', function(e) {
+            e.preventDefault();
+            if (isRecording) {
+                isRecording = false;
+                voiceBtn.style.backgroundColor = '#28a745';
+                voiceBtn.querySelector('.voice-text').textContent = '按住说话';
+                eventStatus.innerHTML = '<p>✅ 鼠标抬起 - 停止录音</p>';
+                eventStatus.className = 'status success';
+            }
+        });
+        
+        voiceBtn.addEventListener('mouseleave', function(e) {
+            if (isRecording) {
+                isRecording = false;
+                voiceBtn.style.backgroundColor = '#28a745';
+                voiceBtn.querySelector('.voice-text').textContent = '按住说话';
+                eventStatus.innerHTML = '<p>⚠️ 鼠标离开 - 自动停止录音</p>';
+                eventStatus.className = 'status warning';
+            }
+        });
+        
+        // 触摸事件支持
+        voiceBtn.addEventListener('touchstart', function(e) {
+            e.preventDefault();
+            isRecording = true;
+            voiceBtn.style.backgroundColor = '#dc3545';
+            voiceBtn.querySelector('.voice-text').textContent = '松开结束';
+            eventStatus.innerHTML = '<p>🔴 触摸开始 - 开始录音</p>';
+            eventStatus.className = 'status warning';
+        });
+        
+        voiceBtn.addEventListener('touchend', function(e) {
+            e.preventDefault();
+            if (isRecording) {
+                isRecording = false;
+                voiceBtn.style.backgroundColor = '#28a745';
+                voiceBtn.querySelector('.voice-text').textContent = '按住说话';
+                eventStatus.innerHTML = '<p>✅ 触摸结束 - 停止录音</p>';
+                eventStatus.className = 'status success';
+            }
+        });
+    </script>
+</body>
+</html>

@@ -1,7 +1,12 @@
 package com.aitravelplanner;
 
-import com.google.genai.Client;
-import com.google.genai.types.GenerateContentResponse;
+import com.aitravelplanner.Service.LocationExtraction;
+import com.aitravelplanner.Service.MapService;
+import com.aitravelplanner.Service.Impl.LocationExtractionImpl;
+import com.aitravelplanner.Service.Impl.MapServiceImpl;
+
+import java.util.List;
+
 import org.junit.jupiter.api.Test;
 import org.springframework.boot.test.context.SpringBootTest;
 
@@ -11,16 +16,7 @@ class AiTravelPlannerApplicationTests {
     @Test
     void contextLoads() {
         
-        // The client gets the API key from the environment variable `GEMINI_API_KEY`.
-        Client client = new Client();
 
-        GenerateContentResponse response =
-                client.models.generateContent(
-                        "gemini-2.5-flash",
-                        "Explain how AI works in a few words",
-                        null);
-
-        System.out.println(response.text());
 
     }
 
